@@ -1,0 +1,232 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Arrays Interactive Slide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .pokemon-card {
+            transition: transform 0.2s;
+        }
+        .pokemon-card:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-6 max-w-4xl">
+        <h1 class="text-4xl font-bold text-center text-blue-600 mb-6">JavaScript Arrays</h1>
+
+        <!-- Recap on Variables -->
+        <section class="mb-8 bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Recap on Variables</h2>
+            <p class="text-lg text-gray-600 mb-2">A variable is like a container that stores information in your program.</p>
+            <pre class="bg-gray-800 text-white p-4 rounded"><code>
+var pokemon1 = "Pikachu";
+var pokemon2 = "Snorlax";
+var pokemon3 = "Charizard";
+            </code></pre>
+            <p class="text-lg text-gray-600 mt-2">What if you had 1000 Pokémon? Arrays make this easier!</p>
+        </section>
+
+        <!-- What is an Array -->
+        <section class="mb-8 bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">What is an Array?</h2>
+            <p class="text-lg text-gray-600 mb-2">An array is a special variable that can hold multiple values, accessible by index numbers (starting from 0).</p>
+            <pre class="bg-gray-800 text-white p-4 rounded"><code>
+const pokemon = ["Pikachu", "Snorlax", "Charizard"];
+            </code></pre>
+        </section>
+
+        <!-- Interactive Array Display -->
+        <section class="mb-8 bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Interactive Array</h2>
+            <p class="text-lg text-gray-600 mb-4">Click a Pokémon to see its index, change values, or add/remove elements.</p>
+            <div id="pokemonArray" class="flex flex-wrap gap-4 mb-4"></div>
+            <p class="text-lg font-semibold">Array Length: <span id="arrayLength" class="text-blue-600">3</span></p>
+
+            <!-- Change Value -->
+            <div class="mt-4">
+                <label for="indexInput" class="text-lg text-gray-600">Change Pokémon at index:</label>
+                <input id="indexInput" type="number" min="0" class="border p-2 rounded w-20 mx-2" placeholder="Index">
+                <input id="valueInput" type="text" class="border p-2 rounded" placeholder="New Pokémon">
+                <button id="changeValueBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Change</button>
+            </div>
+
+            <!-- Add/Remove Elements -->
+            <div class="mt-4 flex gap-4">
+                <div>
+                    <input id="addInput" type="text" class="border p-2 rounded" placeholder="Add Pokémon">
+                    <button id="addBtn" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Add (Push)</button>
+                </div>
+                <button id="removeBtn" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Remove (Pop)</button>
+            </div>
+        </section>
+
+        <!-- Questions Section -->
+        <section class="mb-8 bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Try These Questions!</h2>
+            <p class="text-lg text-gray-600 mb-4">Use the interactive array above to answer the following questions.</p>
+
+            <!-- Question 1 -->
+            <div class="mb-6">
+                <p class="text-lg font-semibold">Question 1: What is the Pokémon at index 1?</p>
+                <input id="q1Input" type="text" class="border p-2 rounded w-64" placeholder="Enter Pokémon name">
+                <button id="q1Btn" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 ml-2">Check Answer</button>
+                <p id="q1Feedback" class="text-lg mt-2"></p>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="mb-6">
+                <p class="text-lg font-semibold">Question 2: Change the Pokémon at index 0 to "Bulbasaur". What is the new array?</p>
+                <button id="q2Btn" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">Check Answer</button>
+                <p id="q2Feedback" class="text-lg mt-2"></p>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="mb-6">
+                <p class="text-lg font-semibold">Question 3: Add "Mewtwo" to the array and check the new length.</p>
+                <input id="q3Input" type="number" min="0" class="border p-2 rounded w-20" placeholder="Length">
+                <button id="q3Btn" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 ml-2">Check Answer</button>
+                <p id="q3Feedback" class="text-lg mt-2"></p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        let pokemon = ["Pikachu", "Snorlax", "Charizard"];
+
+        function updateArrayDisplay() {
+            const arrayDiv = document.getElementById("pokemonArray");
+            arrayDiv.innerHTML = "";
+            pokemon.forEach((item, index) => {
+                const card = document.createElement("div");
+                card.className = "pokemon-card bg-blue-100 p-4 rounded shadow cursor-pointer";
+                card.innerText = `${item} (Index: ${index})`;
+                card.onclick = () => alert(`Index: ${index}, Pokémon: ${item}`);
+                arrayDiv.appendChild(card);
+            });
+            document.getElementById("arrayLength").innerText = pokemon.length;
+        }
+
+        // Initial display
+        updateArrayDisplay();
+
+        // Change value
+        document.getElementById("changeValueBtn").onclick = () => {
+            const index = parseInt(document.getElementById("indexInput").value);
+            const value = document.getElementById("valueInput").value;
+            if (index >= 0 && index < pokemon.length && value) {
+                pokemon[index] = value;
+                updateArrayDisplay();
+                document.getElementById("indexInput").value = "";
+                document.getElementById("valueInput").value = "";
+            } else {
+                alert("Please enter a valid index and Pokémon name.");
+            }
+        };
+
+        // Add element
+        document.getElementById("addBtn").onclick = () => {
+            const value = document.getElementById("addInput").value;
+            if (value) {
+                pokemon.push(value);
+                updateArrayDisplay();
+                document.getElementById("addInput").value = "";
+            } else {
+                alert("Please enter a Pokémon name.");
+            }
+        };
+
+        // Remove element
+        document.getElementById("removeBtn").onclick = () => {
+            if (pokemon.length > 0) {
+                pokemon.pop();
+                updateArrayDisplay();
+            } else {
+                alert("Array is empty!");
+            }
+        };
+
+        // Question 1: Check Pokémon at index 1
+        document.getElementById("q1Btn").onclick = () => {
+            const answer = document.getElementById("q1Input").value.trim();
+            const feedback = document.getElementById("q1Feedback");
+            if (answer.toLowerCase() === pokemon[1].toLowerCase()) {
+                feedback.innerText = "Correct! The Pokémon at index 1 is " + pokemon[1] + ".";
+                feedback.className = "text-lg mt-2 text-green-600";
+            } else {
+                feedback.innerText = "Incorrect. Try clicking the Pokémon cards to find the one at index 1.";
+                feedback.className = "text-lg mt-2 text-red-600";
+            }
+        };
+
+        // Question 2: Change index 0 to Bulbasaur
+        document.getElementById("q2Btn").onclick = () => {
+            const feedback = document.getElementById("q2Feedback");
+            if (pokemon[0] === "Bulbasaur") {
+                feedback.innerText = `Correct! The new array is [${pokemon.join(", ")}].`;
+                feedback.className = "text-lg mt-2 text-green-600";
+            } else {
+                feedback.innerText = "Incorrect. Use the 'Change Pokémon' section to set index 0 to 'Bulbasaur' and try again.";
+                feedback.className = "text-lg mt-2 text-red-600";
+            }
+        };
+
+        // Question 3: Add Mewtwo and check length
+        document.getElementById("q3Btn").onclick = () => {
+            const answer = parseInt(document.getElementById("q3Input").value);
+            const feedback = document.getElementById("q3Feedback");
+            const hasMewtwo = pokemon.includes("Mewtwo");
+            const correctLength = pokemon.length;
+            if (hasMewtwo && answer === correctLength) {
+                feedback.innerText = `Correct! After adding Mewtwo, the array length is ${correctLength}.`;
+                feedback.className = "text-lg mt-2 text-green-600";
+            } else {
+                feedback.innerText = "Incorrect. Use the 'Add (Push)' button to add 'Mewtwo', then check the array length.";
+                feedback.className = "text-lg mt-2 text-red-600";
+            }
+        };
+    </script>
+</body>
+</html>
